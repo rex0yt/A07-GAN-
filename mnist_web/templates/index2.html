@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+{% load staticfiles %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8">
+     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>识别手写数字</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/offcanvas.css">
+
+    <script src="http://libs.baidu.com/jquery/1.9.0/jquery.js"></script>
+    <style type="text/css">
+        .div-inline {
+            display: inline
+        }
+
+        #_canvas {
+            background-color: rgb(240, 240, 240);
+        }
+
+        #first_div {
+            text-align: center
+        }
+
+        #draw_div {
+            /* background-color: rgb(100,100,100); */
+            width: 40%;
+            text-align: center;
+            float: left;
+        }
+
+        #prediction_div {
+            width: 45%;
+            height: 200px;
+            {#float: left;#}
+            text-align: center;
+        }
+
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-fixed-top navbar-inverse">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/img/show/">手写数字生成与识别</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav navbar-nav">
+                <li><a href="/img/show/">生成手写数字</a></li>
+                <li class="active"><a href="/img/shibie/">识别手写数字</a></li>
+                <li><a href="/img/code/">验证码</a></li>
+            </ul>
+        </div><!-- /.nav-collapse -->
+    </div><!-- /.container -->
+</nav><!-- /.navbar -->
+<div class="container">
+    <h1>识别手写数字</h1>
+    <div id="draw_div">
+        <h3>请在画布上写上数字</h3>
+        <canvas id="_canvas">您的浏览器不支持html5!</canvas>
+        <p></p>
+        <a href=""><button onclick="clean()" class="btn btn-success">清除</button></a>
+    </div>
+    <div id="div_box" style="float: left;">
+        <h3>识别出图片</h3>
+        <div id="prediction_div">
+            <a href=""><img src="" id="show_img"/></a>
+        </div>
+        <h3>识别结果</h3>
+        <div id="table_div" >
+        </div>
+    </div>
+</div>
+
+
+<!--<div><button type="button" id="testBotton" onclick="Ssss()">abc</button></div>-->
+
+
+<script language="JavaScript">
+    var canvas_ = document.getElementById("_canvas");
+    var img = document.getElementById("show_img");
+    var lab = document.getElementById("prediction_p");
+
+    //280*280
+    canvas_.setAttribute("width", 280);
+    canvas_.setAttribute("height", 280);
+
+    var context = canvas_.getContext("2d");
+    context.strokeStyle = "red";
+    context.lineWidth = 20;
+
+    //判断鼠标是否按下
+
+    $(document).ready(function () {
+        $("#_canvas").mouseover(function () {
+            draw();
+        });
+        $("#_canvas").mouseout(function () {
+            calculation();
+        });
+    });
+
+    function clean() {
+        context.clearRect(0, 0, canvas_.width, canvas_.height);
+        img.src = "";
+        lab.innerHTML = "";
+        document.getElementById("table_div").innerHTML = "";
+
+    }
+
+    function draw() {
+        canvas_.onmousedown = function (ev) {
+            var ev = ev || event;
+            context.beginPath();
+            context.moveTo(ev.clientX - canvas_.offsetLeft, ev.clientY - canvas_.offsetTop);
+            document.onmousemove = function (ev) {
+                var ev = ev || event;
+                context.lineTo(ev.clientX - canvas_.offsetLeft, ev.clientY - canvas_.offsetTop);
+                context.stroke();
+            }
+            document.onmouseup = function (ev) {
+                document.onmousemove = document.onmouseup = null;
+                context.closePath();
+            }
+        }
+    }
+
+
+    function calculation() {
+
+        var base64Data = canvas_.toDataURL("image/png");//"image/png"
+        {#alert(base64Data)#}
+        var fd = new FormData();
+        fd.append("fileData", base64Data);//fileData为自定义
+        fd.append("fileName", "123jpg");//fileName为自定义，名字随机生成或者写死，看需求
+
+
+        $.ajax({
+            type: "POST",
+            url: '/img/getData/',    //后台处理函数的url
+            data: fd,
+            contentType: false,
+            processData: false,
+            success: function (result) {  //获取后台处理后传过来的result
+                {#alert("df");#}
+                img.src = "/static/show_gray.png";
+                var dst = JSON.parse(result);
+                createTable(dst)
+            },
+        });
+    }
+
+    function createTable(result) {
+        //创建表格
+        //创建对象
+        //window下面的属性方法可以把window去掉或者写上
+        var table_div = document.getElementById("table_div");
+        table_div.innerHTML = "";
+        var table = window.document.createElement("table");
+        table.width = "300px";
+        table.cellspacing = "0";
+
+
+        var th1 = document.createElement("th");
+        var th2 = document.createElement("th");
+        var th3 = document.createElement("th")
+
+        th1.appendChild(document.createTextNode(""));
+        th2.appendChild(document.createTextNode("regression"));
+        th3.appendChild(document.createTextNode("convolutional"));
+        table.appendChild(th1);
+        // table.appendChild(th2);
+        table.appendChild(th3);
+
+        for (var i = 0; i < 10; i++) {
+            var tr = document.createElement("tr");
+            var td1 = document.createElement("td");
+            var td2 = document.createElement("td");
+            var td3 = document.createElement("td");
+
+            //把表格添加到body里去
+            td1.appendChild(document.createTextNode(String(i)));
+            td2.appendChild(document.createTextNode(result[i].num));
+            td3.appendChild(document.createTextNode(result[i].num));
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            // tr.appendChild(td3);
+
+            table.appendChild(tr);
+        }
+        table.setAttribute("border", 1);
+
+        table_div.appendChild(table);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+model_checkpoint_path: "train.ckpt-16500"
+all_model_checkpoint_paths: "train.ckpt-14300"
+all_model_checkpoint_paths: "train.ckpt-14850"
+all_model_checkpoint_paths: "train.ckpt-15400"
+all_model_checkpoint_paths: "train.ckpt-15950"
+all_model_checkpoint_paths: "train.ckpt-16500"
